@@ -8,7 +8,6 @@ describe('TaskGraph.Runner', function () {
     var core = require('on-core')(di, __dirname);
     var servicesCore;
     var TaskScheduler;
-    var TaskRunner;
     var LeaseExpirationPoller;
     var taskMessenger;
     var loader;
@@ -42,7 +41,6 @@ describe('TaskGraph.Runner', function () {
         helper.setupInjector(injectables);
         servicesCore = helper.injector.get('Services.Core');
         TaskScheduler = helper.injector.get('TaskGraph.TaskScheduler');
-        TaskRunner = helper.injector.get('TaskGraph.TaskRunner');
         LeaseExpirationPoller = helper.injector.get('TaskGraph.LeaseExpirationPoller');
         taskMessenger = helper.injector.get('Task.Messenger');
         loader = helper.injector.get('TaskGraph.DataLoader');
@@ -58,7 +56,6 @@ describe('TaskGraph.Runner', function () {
         sandbox.stub(servicesCore, 'stop').resolves();
         sandbox.stub(loader, 'load').resolves();
         sandbox.stub(taskMessenger, 'start').resolves();
-        sandbox.stub(TaskRunner, 'create').resolves();
         sandbox.stub(TaskScheduler, 'create').resolves();
         sandbox.stub(CompletedTaskPoller, 'create').resolves();
         sandbox.stub(serviceGraph, 'start').resolves();
@@ -69,115 +66,49 @@ describe('TaskGraph.Runner', function () {
     });
 
     describe('start method tests', function() {
-        var runnerStartStub;
         var schedulerStartStub;
         var completedTaskPollerStartStub;
 
         beforeEach('setup create methods', function() {
-            runnerStartStub = sinon.stub();
             schedulerStartStub = sinon.stub();
             completedTaskPollerStartStub = sinon.stub();
-            TaskRunner.create.returns({start: runnerStartStub});
             TaskScheduler.create.returns({start: schedulerStartStub});
             CompletedTaskPoller.create.returns({start: completedTaskPollerStartStub});
         });
 
-        it('should start both a scheduler and a runner', function() {
+        it('should start a scheduler', function() {
             return taskGraphRunner.start({
-                runner: true,
                 scheduler: true,
                 domain: 'default'
             }).then(function() {
-                expect(runnerStartStub).to.be.called.once;
                 expect(schedulerStartStub).to.be.called.once;
                 expect(completedTaskPollerStartStub).to.be.called.once;
-                expect(serviceGraph.start).to.be.called.once;
-            });
-        });
-
-        it('should start only a scheduler', function() {
-            return taskGraphRunner.start({
-                runner: false,
-                scheduler: true,
-                domain: 'default'
-            }).then(function() {
-                expect(runnerStartStub).not.to.be.called;
-                expect(schedulerStartStub).to.be.called.once;
-                expect(completedTaskPollerStartStub).to.be.called.once;
-                expect(serviceGraph.start).to.be.called.once;
-            });
-        });
-
-        it('should start only a runner', function() {
-            return taskGraphRunner.start({
-                runner: true,
-                scheduler: false,
-                domain: 'default'
-            }).then(function() {
-                expect(runnerStartStub).to.be.called.once;
-                expect(schedulerStartStub).not.to.be.called;
-                expect(completedTaskPollerStartStub).not.to.be.called;
                 expect(serviceGraph.start).to.be.called.once;
             });
         });
     });
 
     describe('stop method tests', function() {
-        var runnerStopStub;
         var schedulerStopStub;
         var completedTaskPollerStopStub;
 
         beforeEach('setup create methods', function() {
-            runnerStopStub = sinon.stub();
             schedulerStopStub = sinon.stub();
             completedTaskPollerStopStub = sinon.stub();
-            TaskRunner.create.returns({start: sinon.stub(), stop: runnerStopStub});
             TaskScheduler.create.returns({start: sinon.stub(), stop: schedulerStopStub});
             CompletedTaskPoller.create.returns({start: sinon.stub(),
                                                 stop: completedTaskPollerStopStub});
         });
 
-        it('should stop both a scheduler and a runner', function() {
+        it('should stop a scheduler', function() {
             return taskGraphRunner.start({
-                runner: true,
                 scheduler: true,
                 domain: 'default'
             }).then(function() {
                 return taskGraphRunner.stop();
             }).then(function() {
-                expect(runnerStopStub).to.be.called.once;
                 expect(schedulerStopStub).to.be.called.once;
                 expect(completedTaskPollerStopStub).to.be.called.once;
-                expect(servicesCore.stop).to.be.called.once;
-            });
-        });
-
-        it('should stop only a scheduler', function() {
-            return taskGraphRunner.start({
-                runner: false,
-                scheduler: true,
-                domain: 'default'
-            }).then(function() {
-                return taskGraphRunner.stop();
-            }).then(function() {
-                expect(runnerStopStub).not.to.be.called;
-                expect(schedulerStopStub).to.be.called.once;
-                expect(completedTaskPollerStopStub).to.be.called.once;
-                expect(servicesCore.stop).to.be.called.once;
-            });
-        });
-
-        it('should stop only a runner', function() {
-            return taskGraphRunner.start({
-                runner: true,
-                scheduler: false,
-                domain: 'default'
-            }).then(function() {
-                return taskGraphRunner.stop();
-            }).then(function() {
-                expect(runnerStopStub).to.be.called.once;
-                expect(schedulerStopStub).not.to.be.called;
-                expect(completedTaskPollerStopStub).not.to.be.called;
                 expect(servicesCore.stop).to.be.called.once;
             });
         });

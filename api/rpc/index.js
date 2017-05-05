@@ -40,16 +40,11 @@ function schedulerServerFactory(
             var grpc = require('grpc');
             var schedulerProto = grpc.load(self.options.protoFile).scheduler;
 
-            var tasks = require('./tasks.js');
             var workflowGraphs = require('./workflowGraphs.js');
             var workflows = require('./workflows.js');
-            var workflowTasks = require('./workflowTasks.js');
 
             self.gRPC = new grpc.Server();
             self.gRPC.addProtoService(schedulerProto.Scheduler.service, {
-                getBootstrap: grpcWrapper(tasks.getBootstrap),
-                getTasksById: grpcWrapper(tasks.getTasksById),
-                postTaskById: grpcWrapper(tasks.postTaskById),
                 workflowsGetGraphs: grpcWrapper(workflowGraphs.workflowsGetGraphs),
                 workflowsGetGraphsByName: grpcWrapper(workflowGraphs.workflowsGetGraphsByName),
                 workflowsPutGraphs: grpcWrapper(workflowGraphs.workflowsPutGraphs),
@@ -59,10 +54,6 @@ function schedulerServerFactory(
                 workflowsGetByInstanceId: grpcWrapper(workflows.workflowsGetByInstanceId),
                 workflowsDeleteByInstanceId: grpcWrapper(workflows.workflowsDeleteByInstanceId),
                 workflowsAction: grpcWrapper(workflows.workflowsAction),
-                workflowsPutTask: grpcWrapper(workflowTasks.workflowsPutTask),
-                workflowsGetAllTasks: grpcWrapper(workflowTasks.workflowsGetAllTasks),
-                workflowsGetTasksByName: grpcWrapper(workflowTasks.workflowsGetTasksByName),
-                workflowsDeleteTasksByName: grpcWrapper(workflowTasks.workflowsDeleteTasksByName)
             });
 
             self.options.port = self.gRPC.bind(
